@@ -1,3 +1,13 @@
 /home/vitou/Documents/Projects/Java/rastreador-pedidos/backend/src/main/java/com/vitorbertoo/delivery_tracker_backend/DeliveryTrackerBackendApplication.java
+/home/vitou/Documents/Projects/Java/rastreador-pedidos/backend/src/main/java/com/vitorbertoo/delivery_tracker_backend/config/PasswordEncoderConfig.java
 /home/vitou/Documents/Projects/Java/rastreador-pedidos/backend/src/main/java/com/vitorbertoo/delivery_tracker_backend/config/SecurityConfig.java
+/home/vitou/Documents/Projects/Java/rastreador-pedidos/backend/src/main/java/com/vitorbertoo/delivery_tracker_backend/controller/AuthController.java
 /home/vitou/Documents/Projects/Java/rastreador-pedidos/backend/src/main/java/com/vitorbertoo/delivery_tracker_backend/controller/HealthController.java
+/home/vitou/Documents/Projects/Java/rastreador-pedidos/backend/src/main/java/com/vitorbertoo/delivery_tracker_backend/dto/AuthResponse.java
+/home/vitou/Documents/Projects/Java/rastreador-pedidos/backend/src/main/java/com/vitorbertoo/delivery_tracker_backend/dto/LoginRequest.java
+/home/vitou/Documents/Projects/Java/rastreador-pedidos/backend/src/main/java/com/vitorbertoo/delivery_tracker_backend/dto/RegisterRequest.java
+/home/vitou/Documents/Projects/Java/rastreador-pedidos/backend/src/main/java/com/vitorbertoo/delivery_tracker_backend/model/User.java
+/home/vitou/Documents/Projects/Java/rastreador-pedidos/backend/src/main/java/com/vitorbertoo/delivery_tracker_backend/repository/UserRepository.java
+/home/vitou/Documents/Projects/Java/rastreador-pedidos/backend/src/main/java/com/vitorbertoo/delivery_tracker_backend/security/JwtAuthFilter.java
+/home/vitou/Documents/Projects/Java/rastreador-pedidos/backend/src/main/java/com/vitorbertoo/delivery_tracker_backend/security/JwtUtil.java
+/home/vitou/Documents/Projects/Java/rastreador-pedidos/backend/src/main/java/com/vitorbertoo/delivery_tracker_backend/service/UserService.java
