@@ -1,11 +1,14 @@
 package com.vitorbertoo.delivery_tracker_backend.controller;
 
 import com.vitorbertoo.delivery_tracker_backend.dto.CreateOrderRequest;
+import com.vitorbertoo.delivery_tracker_backend.dto.StartTrackingRequest;
+import com.vitorbertoo.delivery_tracker_backend.dto.TrackingResponse;
 import com.vitorbertoo.delivery_tracker_backend.dto.UpdateStatusRequest;
 import com.vitorbertoo.delivery_tracker_backend.model.Order;
 import com.vitorbertoo.delivery_tracker_backend.model.OrderHistory;
 import com.vitorbertoo.delivery_tracker_backend.model.User;
 import com.vitorbertoo.delivery_tracker_backend.service.OrderService;
+import com.vitorbertoo.delivery_tracker_backend.service.TrackingService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import java.util.List;
 import org.springframework.http.HttpStatus;
@@ -19,9 +22,11 @@ import org.springframework.web.bind.annotation.*;
 public class OrderController {
 
     private final OrderService orderService;
+    private final TrackingService trackingService;
 
-    public OrderController(OrderService orderService) {
+    public OrderController(OrderService orderService, TrackingService trackingService) {
         this.orderService = orderService;
+        this.trackingService = trackingService;
     }
 
     @PostMapping
@@ -53,5 +58,17 @@ public class OrderController {
     @GetMapping("/{id}/history")
     public ResponseEntity<List<OrderHistory>> getHistory(@PathVariable Long id) {
         return ResponseEntity.ok(orderService.getHistory(id));
+    }
+
+    @PostMapping("/{id}/tracking")
+    public ResponseEntity<TrackingResponse> startTracking(
+            @PathVariable Long id, @RequestBody StartTrackingRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(trackingService.startTracking(id, request));
+    }
+
+    @GetMapping("/{id}/tracking")
+    public ResponseEntity<TrackingResponse> getTracking(@PathVariable Long id) {
+        return ResponseEntity.ok(trackingService.getTracking(id));
     }
 }
