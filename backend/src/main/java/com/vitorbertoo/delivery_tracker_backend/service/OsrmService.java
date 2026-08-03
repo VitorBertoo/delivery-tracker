@@ -1,8 +1,10 @@
 package com.vitorbertoo.delivery_tracker_backend.service;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import java.time.Duration;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
@@ -12,7 +14,11 @@ public class OsrmService {
     private final RestClient restClient;
 
     public OsrmService(@Value("${osrm.base-url}") String baseUrl) {
-        this.restClient = RestClient.builder().baseUrl(baseUrl).build();
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(Duration.ofSeconds(5));
+        factory.setReadTimeout(Duration.ofSeconds(15));
+
+        this.restClient = RestClient.builder().requestFactory(factory).baseUrl(baseUrl).build();
     }
 
     public OsrmRouteResult getRoute(

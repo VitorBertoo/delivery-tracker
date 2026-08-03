@@ -14,8 +14,10 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.springframework.http.HttpStatus;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class TrackingService {
@@ -84,7 +86,8 @@ public class TrackingService {
                         .findByOrderId(orderId)
                         .orElseThrow(
                                 () ->
-                                        new IllegalArgumentException(
+                                        new ResponseStatusException(
+                                                HttpStatus.NOT_FOUND,
                                                 "No tracking found for order: " + orderId));
         return buildResponse(tracking);
     }

@@ -1,8 +1,10 @@
 package com.vitorbertoo.delivery_tracker_backend.service;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import java.time.Duration;
 import java.util.List;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
@@ -12,8 +14,13 @@ public class NominatimService {
     private final RestClient restClient;
 
     public NominatimService() {
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(Duration.ofSeconds(5));
+        factory.setReadTimeout(Duration.ofSeconds(10));
+
         this.restClient =
                 RestClient.builder()
+                        .requestFactory(factory)
                         .baseUrl("https://nominatim.openstreetmap.org")
                         .defaultHeader("User-Agent", "delivery-tracker-backend/1.0")
                         .defaultHeader("Accept-Language", "pt-BR")
