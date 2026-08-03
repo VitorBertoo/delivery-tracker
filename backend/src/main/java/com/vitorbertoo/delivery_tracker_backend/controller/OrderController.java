@@ -6,6 +6,7 @@ import com.vitorbertoo.delivery_tracker_backend.model.Order;
 import com.vitorbertoo.delivery_tracker_backend.model.OrderHistory;
 import com.vitorbertoo.delivery_tracker_backend.model.User;
 import com.vitorbertoo.delivery_tracker_backend.service.OrderService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/orders")
+@SecurityRequirement(name = "bearerAuth")
 public class OrderController {
 
     private final OrderService orderService;
