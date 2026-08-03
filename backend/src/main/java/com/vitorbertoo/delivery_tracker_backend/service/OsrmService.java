@@ -24,12 +24,8 @@ public class OsrmService {
         OsrmResponse response =
                 restClient
                         .get()
-                        .uri(
-                                path,
-                                originLng,
-                                originLat,
-                                destLng,
-                                destLat)
+                        .uri(path, originLng, originLat, destLng, destLat)
+                        .header("Accept-Encoding", "identity")
                         .retrieve()
                         .body(OsrmResponse.class);
 
