@@ -6,7 +6,6 @@ import com.vitorbertoo.delivery_tracker_backend.dto.RegisterRequest;
 import com.vitorbertoo.delivery_tracker_backend.model.User;
 import com.vitorbertoo.delivery_tracker_backend.security.JwtUtil;
 import com.vitorbertoo.delivery_tracker_backend.service.UserService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -16,12 +15,18 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/auth")
-@RequiredArgsConstructor
 public class AuthController {
 
     private final AuthenticationManager authManager;
     private final UserService userService;
     private final JwtUtil jwtUtil;
+
+    public AuthController(
+            AuthenticationManager authManager, UserService userService, JwtUtil jwtUtil) {
+        this.authManager = authManager;
+        this.userService = userService;
+        this.jwtUtil = jwtUtil;
+    }
 
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> register(@RequestBody RegisterRequest request) {
