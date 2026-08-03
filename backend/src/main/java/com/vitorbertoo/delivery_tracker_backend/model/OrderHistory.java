@@ -1,5 +1,6 @@
 package com.vitorbertoo.delivery_tracker_backend.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
@@ -11,8 +12,10 @@ public class OrderHistory {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "order_id", insertable = false, updatable = false)
-    private Long orderId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "order_id", nullable = false)
+    @JsonIgnore
+    private Order order;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -27,7 +30,8 @@ public class OrderHistory {
 
     public OrderHistory() {}
 
-    public OrderHistory(OrderStatus status, User changedBy) {
+    public OrderHistory(Order order, OrderStatus status, User changedBy) {
+        this.order = order;
         this.status = status;
         this.changedBy = changedBy;
         this.changedAt = LocalDateTime.now();
@@ -38,7 +42,7 @@ public class OrderHistory {
     }
 
     public Long getOrderId() {
-        return orderId;
+        return order != null ? order.getId() : null;
     }
 
     public OrderStatus getStatus() {

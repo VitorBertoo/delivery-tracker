@@ -39,6 +39,7 @@ public class OrderService {
             for (var itemRequest : request.items()) {
                 OrderItem item =
                         new OrderItem(
+                                order,
                                 itemRequest.productName(),
                                 itemRequest.unitPrice(),
                                 itemRequest.quantity());
@@ -52,7 +53,7 @@ public class OrderService {
                         .reduce(BigDecimal.ZERO, BigDecimal::add);
         order.setTotalAmount(total);
 
-        order.getHistory().add(new OrderHistory(order.getStatus(), currentUser));
+        order.getHistory().add(new OrderHistory(order, order.getStatus(), currentUser));
 
         return orderRepository.save(order);
     }
@@ -71,7 +72,7 @@ public class OrderService {
     public Order updateStatus(Long id, UpdateStatusRequest request, User currentUser) {
         Order order = getById(id);
         order.setStatus(request.status());
-        order.getHistory().add(new OrderHistory(request.status(), currentUser));
+        order.getHistory().add(new OrderHistory(order, request.status(), currentUser));
         return orderRepository.save(order);
     }
 

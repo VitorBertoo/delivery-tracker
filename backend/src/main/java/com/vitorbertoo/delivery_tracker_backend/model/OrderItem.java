@@ -1,5 +1,6 @@
 package com.vitorbertoo.delivery_tracker_backend.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 
@@ -11,8 +12,10 @@ public class OrderItem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "order_id", insertable = false, updatable = false)
-    private Long orderId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "order_id", nullable = false)
+    @JsonIgnore
+    private Order order;
 
     @Column(name = "product_name")
     private String productName;
@@ -28,7 +31,8 @@ public class OrderItem {
 
     public OrderItem() {}
 
-    public OrderItem(String productName, BigDecimal unitPrice, int quantity) {
+    public OrderItem(Order order, String productName, BigDecimal unitPrice, int quantity) {
+        this.order = order;
         this.productName = productName;
         this.unitPrice = unitPrice;
         this.quantity = quantity;
@@ -40,7 +44,7 @@ public class OrderItem {
     }
 
     public Long getOrderId() {
-        return orderId;
+        return order != null ? order.getId() : null;
     }
 
     public String getProductName() {
