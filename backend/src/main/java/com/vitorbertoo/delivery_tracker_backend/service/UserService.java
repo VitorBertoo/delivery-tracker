@@ -31,12 +31,7 @@ public class UserService implements UserDetailsService {
         if (userRepository.existsByEmail(request.email())) {
             throw new IllegalArgumentException("Email already in use");
         }
-        User user =
-                User.builder()
-                        .name(request.name())
-                        .email(request.email())
-                        .passwordHash(passwordEncoder.encode(request.password()))
-                        .build();
+        User user = new User(request.name(), request.email(), passwordEncoder.encode(request.password()));
         return userRepository.save(user);
     }
 }
