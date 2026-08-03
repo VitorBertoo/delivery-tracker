@@ -25,7 +25,7 @@ export const getHistory = (id: number) =>
 
 export const startTracking = (
   id: number,
-  payload: { originLat: number; originLng: number; destLat: number; destLng: number }
+  payload: { originLat: number; originLng: number }
 ) =>
   apiFetch<TrackingData>(`/orders/${id}/tracking`, {
     method: 'POST',

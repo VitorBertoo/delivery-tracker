@@ -37,8 +37,6 @@ export function OrderDetailPage() {
   const [trackingForm, setTrackingForm] = useState({
     originLat: String(SAO_PAULO[1]),
     originLng: String(SAO_PAULO[0]),
-    destLat: '',
-    destLng: '',
   });
   const [startingTracking, setStartingTracking] = useState(false);
   const [trackingError, setTrackingError] = useState('');
@@ -81,8 +79,6 @@ export function OrderDetailPage() {
       const data = await startTracking(orderId, {
         originLat: parseFloat(trackingForm.originLat),
         originLng: parseFloat(trackingForm.originLng),
-        destLat: parseFloat(trackingForm.destLat),
-        destLng: parseFloat(trackingForm.destLng),
       });
       setSavedTracking(data);
       setTrackingNotFound(false);
@@ -292,35 +288,7 @@ export function OrderDetailPage() {
                     />
                   </div>
                 </div>
-                <div className="field-row">
-                  <div className="field">
-                    <label>Destino lat</label>
-                    <input
-                      type="number"
-                      step="any"
-                      required
-                      placeholder="-23.5614"
-                      value={trackingForm.destLat}
-                      onChange={(e) =>
-                        setTrackingForm({ ...trackingForm, destLat: e.target.value })
-                      }
-                    />
-                  </div>
-                  <div className="field">
-                    <label>Destino lng</label>
-                    <input
-                      type="number"
-                      step="any"
-                      required
-                      placeholder="-46.6558"
-                      value={trackingForm.destLng}
-                      onChange={(e) =>
-                        setTrackingForm({ ...trackingForm, destLng: e.target.value })
-                      }
-                    />
-                  </div>
-                </div>
-                {trackingError && <p className="error-msg">{trackingError}</p>}
+{trackingError && <p className="error-msg">{trackingError}</p>}
                 <button type="submit" className="btn btn-primary" disabled={startingTracking}>
                   {startingTracking ? 'Iniciando...' : 'Iniciar rastreio'}
                 </button>

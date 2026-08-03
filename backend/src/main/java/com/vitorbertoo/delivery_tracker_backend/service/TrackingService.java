@@ -5,12 +5,15 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vitorbertoo.delivery_tracker_backend.dto.StartTrackingRequest;
 import com.vitorbertoo.delivery_tracker_backend.dto.TrackingResponse;
+import com.vitorbertoo.delivery_tracker_backend.model.Order;
 import com.vitorbertoo.delivery_tracker_backend.model.OrderTracking;
 import com.vitorbertoo.delivery_tracker_backend.repository.OrderTrackingRepository;
 import com.vitorbertoo.delivery_tracker_backend.service.OsrmService.OsrmRouteResult;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
@@ -20,6 +23,7 @@ public class TrackingService {
     private final OrderTrackingRepository trackingRepository;
     private final OrderService orderService;
     private final OsrmService osrmService;
+    private final NominatimService nominatimService;
     private final SimpMessagingTemplate messagingTemplate;
     private final ObjectMapper objectMapper;
 
@@ -27,28 +31,30 @@ public class TrackingService {
             OrderTrackingRepository trackingRepository,
             OrderService orderService,
             OsrmService osrmService,
+            NominatimService nominatimService,
             SimpMessagingTemplate messagingTemplate,
             ObjectMapper objectMapper) {
         this.trackingRepository = trackingRepository;
         this.orderService = orderService;
         this.osrmService = osrmService;
+        this.nominatimService = nominatimService;
         this.messagingTemplate = messagingTemplate;
         this.objectMapper = objectMapper;
     }
 
     public TrackingResponse startTracking(Long orderId, StartTrackingRequest request) {
-        orderService.getById(orderId);
+        Order order = orderService.getById(orderId);
 
         if (trackingRepository.existsByOrderId(orderId)) {
             throw new IllegalStateException("Tracking already started for order: " + orderId);
         }
 
+        double[] dest = nominatimService.geocode(
+                buildStreet(order), order.getDeliveryCity(), order.getDeliveryState());
+
         OsrmRouteResult route =
                 osrmService.getRoute(
-                        request.originLat(),
-                        request.originLng(),
-                        request.destLat(),
-                        request.destLng());
+                        request.originLat(), request.originLng(), dest[0], dest[1]);
 
         String routeGeometryJson;
         try {
@@ -62,8 +68,8 @@ public class TrackingService {
                         orderId,
                         request.originLat(),
                         request.originLng(),
-                        request.destLat(),
-                        request.destLng(),
+                        dest[0],
+                        dest[1],
                         routeGeometryJson,
                         route.durationSeconds(),
                         route.distanceMeters());
@@ -89,6 +95,12 @@ public class TrackingService {
             messagingTemplate.convertAndSend(
                     "/topic/tracking/" + tracking.getOrderId(), response);
         });
+    }
+
+    private String buildStreet(Order order) {
+        return Stream.of(order.getDeliveryStreet(), order.getDeliveryNumber())
+                .filter(s -> s != null && !s.isBlank())
+                .collect(Collectors.joining(", "));
     }
 
     private TrackingResponse buildResponse(OrderTracking tracking) {
@@ -120,7 +132,6 @@ public class TrackingService {
                 progress >= 1.0);
     }
 
-    // Returns [lat, lng]
     private double[] interpolateAlongRoute(List<List<Double>> coordinates, double progress) {
         if (progress <= 0 || coordinates.size() < 2) {
             return new double[] {coordinates.get(0).get(1), coordinates.get(0).get(0)};
