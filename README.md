@@ -6,12 +6,28 @@ Aplicação full-stack de rastreamento de entregas construída com Java + Spring
 
 ## Rodando localmente
 
-### Pré-requisitos
+### Com Docker (recomendado)
+
+A forma mais rápida de rodar o projeto sem instalar Java ou Node.js. Basta ter o **Docker** instalado.
+
+```bash
+docker compose up --build
+```
+
+- Frontend: `http://localhost:5173`
+- Backend: `http://localhost:8080`
+- Swagger UI: `http://localhost:8080/swagger-ui/index.html`
+
+> O banco de dados SQLite é criado em memória no container e resetado a cada reinicialização, o que é suficiente para fins de demonstração.
+
+### Sem Docker
+
+#### Pré-requisitos
 - Java 21+
 - Maven 3.9+
 - Node.js 20+
 
-### Backend
+#### Backend
 
 ```bash
 cd backend
@@ -21,7 +37,7 @@ cd backend
 A API estará disponível em `http://localhost:8080`.
 Swagger UI: `http://localhost:8080/swagger-ui/index.html`
 
-### Frontend
+#### Frontend
 
 ```bash
 cd frontend
