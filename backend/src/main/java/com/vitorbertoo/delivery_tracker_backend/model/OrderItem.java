@@ -11,9 +11,8 @@ public class OrderItem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "order_id", nullable = false)
-    private Order order;
+    @Column(name = "order_id", insertable = false, updatable = false)
+    private Long orderId;
 
     @Column(name = "product_name")
     private String productName;
@@ -29,8 +28,7 @@ public class OrderItem {
 
     public OrderItem() {}
 
-    public OrderItem(Order order, String productName, BigDecimal unitPrice, int quantity) {
-        this.order = order;
+    public OrderItem(String productName, BigDecimal unitPrice, int quantity) {
         this.productName = productName;
         this.unitPrice = unitPrice;
         this.quantity = quantity;
@@ -41,8 +39,8 @@ public class OrderItem {
         return id;
     }
 
-    public Order getOrder() {
-        return order;
+    public Long getOrderId() {
+        return orderId;
     }
 
     public String getProductName() {

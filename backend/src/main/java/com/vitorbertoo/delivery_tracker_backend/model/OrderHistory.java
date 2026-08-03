@@ -11,9 +11,8 @@ public class OrderHistory {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "order_id", nullable = false)
-    private Order order;
+    @Column(name = "order_id", insertable = false, updatable = false)
+    private Long orderId;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -28,8 +27,7 @@ public class OrderHistory {
 
     public OrderHistory() {}
 
-    public OrderHistory(Order order, OrderStatus status, User changedBy) {
-        this.order = order;
+    public OrderHistory(OrderStatus status, User changedBy) {
         this.status = status;
         this.changedBy = changedBy;
         this.changedAt = LocalDateTime.now();
@@ -39,8 +37,8 @@ public class OrderHistory {
         return id;
     }
 
-    public Order getOrder() {
-        return order;
+    public Long getOrderId() {
+        return orderId;
     }
 
     public OrderStatus getStatus() {
