@@ -1,18 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getOrder, getTracking, startTracking, updateStatus } from '../api/orders';
 import { DeliveryMap, SAO_PAULO } from '../components/DeliveryMap';
 import { StatusBadge } from '../components/StatusBadge';
 import { useTracking } from '../hooks/useTracking';
 import type { Order, OrderStatus, TrackingData } from '../types';
-
-const STATUS_OPTIONS: OrderStatus[] = [
-  'RECEBIDO',
-  'EM_PREPARO',
-  'SAIU_PARA_ENTREGA',
-  'ENTREGUE',
-  'CANCELADO',
-];
 
 const STATUS_LABELS: Record<OrderStatus, string> = {
   RECEBIDO: 'Recebido',
@@ -22,6 +14,13 @@ const STATUS_LABELS: Record<OrderStatus, string> = {
   CANCELADO: 'Cancelado',
 };
 
+const NEXT_STATUS: Partial<Record<OrderStatus, OrderStatus>> = {
+  RECEBIDO: 'EM_PREPARO',
+  EM_PREPARO: 'SAIU_PARA_ENTREGA',
+};
+
+const TERMINAL_STATUSES: OrderStatus[] = ['ENTREGUE', 'CANCELADO'];
+
 export function OrderDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -29,41 +28,52 @@ export function OrderDetailPage() {
 
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
-  const [selectedStatus, setSelectedStatus] = useState<OrderStatus>('RECEBIDO');
   const [updatingStatus, setUpdatingStatus] = useState(false);
 
   const [savedTracking, setSavedTracking] = useState<TrackingData | null>(null);
-  const [trackingNotFound, setTrackingNotFound] = useState(false);
-  const [trackingForm, setTrackingForm] = useState({
-    originLat: String(SAO_PAULO[1]),
-    originLng: String(SAO_PAULO[0]),
-  });
-  const [startingTracking, setStartingTracking] = useState(false);
-  const [trackingError, setTrackingError] = useState('');
 
   const liveTracking = useTracking(orderId);
   const tracking = liveTracking ?? savedTracking;
 
+  // Prevent auto-complete from firing more than once
+  const autoCompletedRef = useRef(false);
+
   useEffect(() => {
     getOrder(orderId)
-      .then((o) => {
-        setOrder(o);
-        setSelectedStatus(o.status);
-      })
+      .then(setOrder)
       .catch(console.error)
       .finally(() => setLoading(false));
 
     getTracking(orderId)
       .then(setSavedTracking)
-      .catch(() => setTrackingNotFound(true));
+      .catch(() => {});
   }, [orderId]);
 
-  async function handleStatusUpdate() {
+  // Auto-complete order when delivery arrives
+  useEffect(() => {
+    if (liveTracking?.arrived && !autoCompletedRef.current) {
+      autoCompletedRef.current = true;
+      updateStatus(orderId, 'ENTREGUE')
+        .then(setOrder)
+        .catch(console.error);
+    }
+  }, [liveTracking?.arrived, orderId]);
+
+  async function handleNextStep() {
     if (!order) return;
+    const next = NEXT_STATUS[order.status];
+    if (!next) return;
     setUpdatingStatus(true);
     try {
-      const updated = await updateStatus(orderId, selectedStatus);
+      const updated = await updateStatus(orderId, next);
       setOrder(updated);
+      if (next === 'SAIU_PARA_ENTREGA') {
+        const data = await startTracking(orderId, {
+          originLat: SAO_PAULO[1],
+          originLng: SAO_PAULO[0],
+        });
+        setSavedTracking(data);
+      }
     } catch (err) {
       console.error(err);
     } finally {
@@ -71,21 +81,16 @@ export function OrderDetailPage() {
     }
   }
 
-  async function handleStartTracking(e: React.FormEvent) {
-    e.preventDefault();
-    setTrackingError('');
-    setStartingTracking(true);
+  async function handleCancel() {
+    if (!order) return;
+    setUpdatingStatus(true);
     try {
-      const data = await startTracking(orderId, {
-        originLat: parseFloat(trackingForm.originLat),
-        originLng: parseFloat(trackingForm.originLng),
-      });
-      setSavedTracking(data);
-      setTrackingNotFound(false);
+      const updated = await updateStatus(orderId, 'CANCELADO');
+      setOrder(updated);
     } catch (err) {
-      setTrackingError(err instanceof Error ? err.message : 'Erro ao iniciar rastreio.');
+      console.error(err);
     } finally {
-      setStartingTracking(false);
+      setUpdatingStatus(false);
     }
   }
 
@@ -140,28 +145,36 @@ export function OrderDetailPage() {
           </section>
 
           {/* Status update */}
-          <section className="card">
-            <h2>Atualizar status</h2>
-            <div className="status-update-row">
-              <select
-                value={selectedStatus}
-                onChange={(e) => setSelectedStatus(e.target.value as OrderStatus)}
-              >
-                {STATUS_OPTIONS.map((s) => (
-                  <option key={s} value={s}>
-                    {STATUS_LABELS[s]}
-                  </option>
-                ))}
-              </select>
-              <button
-                className="btn btn-primary"
-                onClick={handleStatusUpdate}
-                disabled={updatingStatus || selectedStatus === order.status}
-              >
-                {updatingStatus ? 'Salvando...' : 'Salvar'}
-              </button>
-            </div>
-          </section>
+          {!TERMINAL_STATUSES.includes(order.status) && (
+            <section className="card">
+              <h2>Ações</h2>
+              <div className="status-update-row">
+                {NEXT_STATUS[order.status] && (
+                  <button
+                    className="btn btn-primary"
+                    onClick={handleNextStep}
+                    disabled={updatingStatus}
+                  >
+                    {updatingStatus
+                      ? 'Aguarde...'
+                      : `Avançar para ${STATUS_LABELS[NEXT_STATUS[order.status]!]}`}
+                  </button>
+                )}
+                {order.status === 'SAIU_PARA_ENTREGA' && (
+                  <p className="muted" style={{ fontSize: '13px' }}>
+                    Entrega em andamento — status atualiza automaticamente.
+  </p>
+                )}
+                <button
+                  className="btn btn-danger"
+                  onClick={handleCancel}
+                  disabled={updatingStatus}
+                >
+                  Cancelar pedido
+                </button>
+              </div>
+            </section>
+          )}
 
           {/* Items */}
           {order.items.length > 0 && (
@@ -257,44 +270,12 @@ export function OrderDetailPage() {
                   </p>
                 )}
               </div>
-            ) : trackingNotFound ? (
-              <form onSubmit={handleStartTracking} className="form">
-                <p className="muted">Nenhum rastreio iniciado para este pedido.</p>
-                <div className="field-row">
-                  <div className="field">
-                    <label>Origem lat</label>
-                    <input
-                      type="number"
-                      step="any"
-                      required
-                      placeholder="-23.5505"
-                      value={trackingForm.originLat}
-                      onChange={(e) =>
-                        setTrackingForm({ ...trackingForm, originLat: e.target.value })
-                      }
-                    />
-                  </div>
-                  <div className="field">
-                    <label>Origem lng</label>
-                    <input
-                      type="number"
-                      step="any"
-                      required
-                      placeholder="-46.6333"
-                      value={trackingForm.originLng}
-                      onChange={(e) =>
-                        setTrackingForm({ ...trackingForm, originLng: e.target.value })
-                      }
-                    />
-                  </div>
-                </div>
-{trackingError && <p className="error-msg">{trackingError}</p>}
-                <button type="submit" className="btn btn-primary" disabled={startingTracking}>
-                  {startingTracking ? 'Iniciando...' : 'Iniciar rastreio'}
-                </button>
-              </form>
             ) : (
-              <p className="muted">Carregando rastreio...</p>
+              <p className="muted">
+                {order.status === 'SAIU_PARA_ENTREGA'
+                  ? 'Iniciando rastreio...'
+                  : 'O rastreio será iniciado automaticamente ao sair para entrega.'}
+              </p>
             )}
           </section>
         </div>

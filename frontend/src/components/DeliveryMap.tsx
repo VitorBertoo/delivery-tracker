@@ -4,7 +4,7 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import type { TrackingData } from '../types';
 
 // São Paulo center as [lng, lat] (MapLibre convention)
-export const SAO_PAULO: [number, number] = [-46.6333, -23.5505];
+export const SAO_PAULO: [number, number] = [-46.67819919309489, -23.563098989056247];
 
 interface Markers {
   origin?: maplibregl.Marker;
@@ -36,7 +36,12 @@ function applyTracking(map: maplibregl.Map, markers: Markers, tracking: Tracking
   }
 
   if (!markers.current) {
-    markers.current = new maplibregl.Marker({ color: '#22c55e' })
+    const el = document.createElement('img');
+    el.src = '/delivery_person.png';
+    el.style.width = '40px';
+    el.style.height = '40px';
+    el.style.objectFit = 'contain';
+    markers.current = new maplibregl.Marker({ element: el })
       .setLngLat(current)
       .setPopup(new maplibregl.Popup({ offset: 25 }).setText('Entregador'))
       .addTo(map);

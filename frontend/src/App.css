@@ -101,6 +101,15 @@
   opacity: 0.88;
 }
 
+.btn-danger {
+  background: #ef4444;
+  color: #fff;
+}
+
+.btn-danger:hover:not(:disabled) {
+  opacity: 0.88;
+}
+
 .btn-ghost {
   background: transparent;
   color: var(--text);
