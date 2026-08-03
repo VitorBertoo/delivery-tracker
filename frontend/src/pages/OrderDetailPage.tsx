@@ -31,6 +31,8 @@ export function OrderDetailPage() {
   const [updatingStatus, setUpdatingStatus] = useState(false);
 
   const [savedTracking, setSavedTracking] = useState<TrackingData | null>(null);
+  const [startingTracking, setStartingTracking] = useState(false);
+  const [trackingError, setTrackingError] = useState('');
 
   const liveTracking = useTracking(orderId);
   const tracking = liveTracking ?? savedTracking;
@@ -59,6 +61,22 @@ export function OrderDetailPage() {
     }
   }, [liveTracking?.arrived, orderId]);
 
+  async function triggerStartTracking() {
+    setStartingTracking(true);
+    setTrackingError('');
+    try {
+      const data = await startTracking(orderId, {
+        originLat: SAO_PAULO[1],
+        originLng: SAO_PAULO[0],
+      });
+      setSavedTracking(data);
+    } catch (err) {
+      setTrackingError(err instanceof Error ? err.message : 'Erro ao iniciar rastreio.');
+    } finally {
+      setStartingTracking(false);
+    }
+  }
+
   async function handleNextStep() {
     if (!order) return;
     const next = NEXT_STATUS[order.status];
@@ -68,11 +86,7 @@ export function OrderDetailPage() {
       const updated = await updateStatus(orderId, next);
       setOrder(updated);
       if (next === 'SAIU_PARA_ENTREGA') {
-        const data = await startTracking(orderId, {
-          originLat: SAO_PAULO[1],
-          originLng: SAO_PAULO[0],
-        });
-        setSavedTracking(data);
+        await triggerStartTracking();
       }
     } catch (err) {
       console.error(err);
@@ -270,12 +284,25 @@ export function OrderDetailPage() {
                   </p>
                 )}
               </div>
+            ) : order.status === 'SAIU_PARA_ENTREGA' ? (
+              <div className="form">
+                {trackingError ? (
+                  <>
+                    <p className="error-msg">{trackingError}</p>
+                    <button
+                      className="btn btn-primary"
+                      onClick={triggerStartTracking}
+                      disabled={startingTracking}
+                    >
+                      {startingTracking ? 'Tentando novamente...' : 'Tentar novamente'}
+                    </button>
+                  </>
+                ) : (
+                  <p className="muted">Iniciando rastreio...</p>
+                )}
+              </div>
             ) : (
-              <p className="muted">
-                {order.status === 'SAIU_PARA_ENTREGA'
-                  ? 'Iniciando rastreio...'
-                  : 'O rastreio será iniciado automaticamente ao sair para entrega.'}
-              </p>
+              <p className="muted">O rastreio será iniciado automaticamente ao sair para entrega.</p>
             )}
           </section>
         </div>
