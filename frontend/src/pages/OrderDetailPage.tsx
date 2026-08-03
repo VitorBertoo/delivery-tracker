@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getOrder, getTracking, startTracking, updateStatus } from '../api/orders';
+import { DeliveryMap, SAO_PAULO } from '../components/DeliveryMap';
 import { StatusBadge } from '../components/StatusBadge';
 import { useTracking } from '../hooks/useTracking';
 import type { Order, OrderStatus, TrackingData } from '../types';
@@ -34,8 +35,8 @@ export function OrderDetailPage() {
   const [savedTracking, setSavedTracking] = useState<TrackingData | null>(null);
   const [trackingNotFound, setTrackingNotFound] = useState(false);
   const [trackingForm, setTrackingForm] = useState({
-    originLat: '',
-    originLng: '',
+    originLat: String(SAO_PAULO[1]),
+    originLng: String(SAO_PAULO[0]),
     destLat: '',
     destLng: '',
   });
@@ -330,6 +331,13 @@ export function OrderDetailPage() {
           </section>
         </div>
       </main>
+
+      <div className="main-content map-section">
+        <section className="card">
+          <h2>Mapa de entrega</h2>
+          <DeliveryMap tracking={tracking} />
+        </section>
+      </div>
     </div>
   );
 }
